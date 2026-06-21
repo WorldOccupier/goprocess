@@ -1,6 +1,7 @@
 package processor
 
 import (
+	"context"
 	"goprocess/contentretriever"
 	"goprocess/persistor"
 	"strings"
@@ -11,7 +12,7 @@ import (
 var (
 	script = "script"
 	style = "style"
-	urlContentsCount = 10
+	batchSize = 10
 )
 
 func getTermCounts(htmlContent string) map[string]int {
@@ -48,15 +49,31 @@ func getTermCounts(htmlContent string) map[string]int {
 	}
 }
 
-func Process() {
-	// TODO: Implement continuous processing
-	urlContents := contentretriever.Get(urlContentsCount)
-	var urlTermCounts = make([]persistor.UrlTermCount, urlContentsCount)
+func Process(ctx context.Context) {
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		default:
+		}
 
-	for _, urlContent := range urlContents {
-		termCounts := getTermCounts(urlContent.Content)
-		urlTermCounts = append(urlTermCounts, persistor.UrlTermCount{Url: urlContent.Url, TermCount: termCounts})
+		urlContents := contentretriever.GetUnprocessed(batchSize)
+		if len(urlContents) == 0 {
+			break
+		}
+
+		urlTermCounts := make([]persistor.UrlTermCount, 0, len(urlContents))
+		for _, urlContent := range urlContents {
+			termCounts := getTermCounts(urlContent.Content)
+			urlTermCounts = append(urlTermCounts, persistor.UrlTermCount{Url: urlContent.Url, TermCount: termCounts})
+		}
+
+		persistor.SaveUrlTermCounts(urlTermCounts)
+
+		urls := make([]string, len(urlContents))
+		for i, uc := range urlContents {
+			urls[i] = uc.Url
+		}
+		contentretriever.MarkProcessed(urls)
 	}
-
-	persistor.SaveUrlTermCounts(urlTermCounts)
 }

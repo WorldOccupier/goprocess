@@ -35,7 +35,7 @@ func rowToUrlContent(row pgx.CollectableRow) (UrlContent, error) {
 	return u, err
 }
 
-func Get(count int) []UrlContent {
+func GetUnprocessed(count int) []UrlContent {
 	dbUrl := getDBUrl()
 	connection, err := pgxpool.New(ctx, dbUrl)
 	if err != nil {
@@ -44,7 +44,7 @@ func Get(count int) []UrlContent {
 	}
 	defer connection.Close()
 
-	rows, err := connection.Query(ctx, "SELECT url, content FROM t_web_page_details LIMIT $1", count)
+	rows, err := connection.Query(ctx, "SELECT url, content FROM t_web_page_details WHERE processed = FALSE LIMIT $1", count)
 	if err != nil {
 		logger.Log.Error("Error retrieving url content", "err", err)
 		return nil
@@ -59,4 +59,19 @@ func Get(count int) []UrlContent {
 	logger.Log.Info("Rows count: " + strconv.Itoa(len(results)))
 
 	return results
+}
+
+func MarkProcessed(urls []string) {
+	dbUrl := getDBUrl()
+	connection, err := pgxpool.New(ctx, dbUrl)
+	if err != nil {
+		logger.Log.Error("Unable to get DB connection", "error", err)
+		return
+	}
+	defer connection.Close()
+
+	_, err = connection.Exec(ctx, "UPDATE t_web_page_details SET processed = TRUE WHERE url = ANY($1)", urls)
+	if err != nil {
+		logger.Log.Error("Failed to mark URLs as processed", "err", err)
+	}
 }

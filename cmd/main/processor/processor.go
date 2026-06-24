@@ -10,8 +10,8 @@ import (
 )
 
 var (
-	script = "script"
-	style = "style"
+	script    = "script"
+	style     = "style"
 	batchSize = 10
 )
 

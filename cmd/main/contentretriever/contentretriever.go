@@ -11,7 +11,7 @@ import (
 )
 
 var (
-	ctx = context.Background()
+	ctx                = context.Background()
 	defaultDatabaseUrl = "postgres://user:pass@host.docker.internal:5432/mydb"
 )
 

@@ -1,4 +1,4 @@
-.PHONY: up down rebuild logs clean localbuild postgres lint
+.PHONY: up down rebuild logs clean localbuild postgres lint fmt
 
 up:
 	docker compose up -d
@@ -20,6 +20,9 @@ clean:
 
 localbuild:
 	go build -C cmd/main -o ../../goprocess .
+
+fmt:
+	go fmt ./cmd/main/...
 
 lint:
 	cd cmd/main && golangci-lint run ./...

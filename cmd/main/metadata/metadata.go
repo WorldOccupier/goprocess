@@ -11,9 +11,9 @@ import (
 )
 
 var (
-	ctx = context.Background()
+	ctx                = context.Background()
 	defaultDatabaseUrl = "postgres://user:pass@postgres:5432/goprocess"
-	UpdateInterval = 1 * time.Minute
+	UpdateInterval     = 1 * time.Minute
 )
 
 func getDBUrl() string {

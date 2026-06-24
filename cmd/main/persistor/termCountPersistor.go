@@ -10,12 +10,12 @@ import (
 )
 
 var (
-	ctx = context.Background()
+	ctx                = context.Background()
 	defaultDatabaseUrl = "postgres://user:pass@postgres:5432/goprocess"
 )
 
 type UrlTermCount struct {
-	Url string
+	Url       string
 	TermCount map[string]int
 }
 
@@ -36,18 +36,18 @@ func SaveUrlTermCounts(urlTermCounts []UrlTermCount) {
 		return
 	}
 	defer connection.Close()
-    batch := &pgx.Batch{}
-    for _, utc := range urlTermCounts {
-        for term, count := range utc.TermCount {
-            batch.Queue(
-                `INSERT INTO t_url_term_count (term, termCount, url)
+	batch := &pgx.Batch{}
+	for _, utc := range urlTermCounts {
+		for term, count := range utc.TermCount {
+			batch.Queue(
+				`INSERT INTO t_url_term_count (term, termCount, url)
                  VALUES ($1, $2, $3)
                  ON CONFLICT (term, url) DO UPDATE SET termCount = $2`,
-                term, count, utc.Url,
-            )
-        }
-    }
+				term, count, utc.Url,
+			)
+		}
+	}
 
-    br := connection.SendBatch(ctx, batch)
-    br.Close()
+	br := connection.SendBatch(ctx, batch)
+	br.Close()
 }
